@@ -1,29 +1,20 @@
 class Solution
 {
 public:
-    void topoSort(unordered_map<int, vector<int>> &adj, vector<int> &inDegree, int &cnt)
+    bool isCycleDfs(unordered_map<int, vector<int>> &adj, vector<bool> &vis, vector<bool> &inRecursion, int u)
     {
-        queue<int> q;
-        for (int i = 0; i < inDegree.size(); i++)
-        {
-            if (inDegree[i] == 0)
-                q.push(i);
-        }
+        vis[u] = true;
+        inRecursion[u] = true;
 
-        while (!q.empty())
+        for (auto neigh : adj[u])
         {
-            int u = q.front();
-            for (auto neigh : adj[u])
-            {
-                inDegree[neigh]--;
-                if (inDegree[neigh] == 0)
-                {
-                    q.push(neigh);
-                }
-            }
-            cnt++;
-            q.pop();
+            if (vis[neigh] && inRecursion[neigh])
+                return true;
+            if (!vis[neigh] && isCycleDfs(adj, vis, inRecursion, neigh))
+                return true;
         }
+        inRecursion[u] = false;
+        return false;
     }
 
     bool canFinish(int numCourses, vector<vector<int>> &prerequisites)
@@ -36,10 +27,14 @@ public:
             inDegree[vec[0]]++;
         }
         vector<bool> vis(numCourses, false);
-        int cnt = 0;
+        vector<bool> inRecursion(numCourses, false);
 
-        topoSort(adj, inDegree, cnt);
+        for (int i = 0; i < numCourses; i++)
+        {
+            if (!vis[i] && isCycleDfs(adj, vis, inRecursion, i))
+                return false;
+        }
 
-        return cnt == numCourses;
+        return true;
     }
 };

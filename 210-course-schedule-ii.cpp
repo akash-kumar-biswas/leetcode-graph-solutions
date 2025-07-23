@@ -1,47 +1,64 @@
 class Solution
 {
 public:
-    int topoSort(unordered_map<int, vector<int>> &adj, vector<int> &inDegree, vector<int> &ans)
+    bool isCyclicDfs(unordered_map<int, vector<int>> &adj, int u, vector<bool> &vis, vector<bool> &inRecursion)
     {
-        int cnt = 0;
-        queue<int> q;
+        vis[u] = true;
+        inRecursion[u] = true;
 
-        for (int i = 0; i < inDegree.size(); i++)
+        for (auto neigh : adj[u])
         {
-            if (inDegree[i] == 0)
-                q.push(i);
+            if (vis[neigh] && inRecursion[neigh])
+                return true;
+            if (!vis[neigh] && isCyclicDfs(adj, neigh, vis, inRecursion))
+                return true;
         }
+        inRecursion[u] = false;
+        return false;
+    }
 
-        while (!q.empty())
+    void topoSortDfs(unordered_map<int, vector<int>> &adj, vector<bool> &vis, stack<int> &stk, int u)
+    {
+        vis[u] = true;
+
+        for (auto neigh : adj[u])
         {
-            int u = q.front();
-
-            for (auto neigh : adj[u])
-            {
-                inDegree[neigh]--;
-                if (inDegree[neigh] == 0)
-                    q.push(neigh);
-            }
-            cnt++;
-            ans.push_back(u);
-            q.pop();
+            if (!vis[neigh])
+                topoSortDfs(adj, vis, stk, neigh);
         }
-        return cnt;
+        stk.push(u);
     }
 
     vector<int> findOrder(int numCourses, vector<vector<int>> &prerequisites)
     {
         unordered_map<int, vector<int>> adj;
-        vector<int> inDegree(numCourses, 0);
-        vector<int> ans;
+        vector<bool> inRecursion(numCourses, false);
+        vector<bool> vis(numCourses, false);
 
         for (auto vec : prerequisites)
         {
             adj[vec[1]].push_back(vec[0]);
-            inDegree[vec[0]]++;
         }
-        if (topoSort(adj, inDegree, ans) == numCourses)
-            return ans;
-        return {};
+
+        for (int i = 0; i < numCourses; i++)
+        {
+            if (!vis[i] && isCyclicDfs(adj, i, vis, inRecursion))
+                return {};
+        }
+        fill(vis.begin(), vis.end(), false);
+        stack<int> stk;
+        for (int i = 0; i < numCourses; i++)
+        {
+            if (!vis[i])
+                topoSortDfs(adj, vis, stk, i);
+        }
+
+        vector<int> ans;
+        while (!stk.empty())
+        {
+            ans.push_back(stk.top());
+            stk.pop();
+        }
+        return ans;
     }
 };

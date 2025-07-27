@@ -1,7 +1,10 @@
 class Solution
 {
 public:
-    vector<vector<int>> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    vector<vector<int>> directions = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+
+    using P = pair<int, pair<int, int>>;
 
     bool isValid(int x, int y, int n)
     {
@@ -11,44 +14,41 @@ public:
     int shortestPathBinaryMatrix(vector<vector<int>> &grid)
     {
         int n = grid.size();
-
-        if (grid[0][0] == 1)
+        if (grid[0][0] == 1 || grid[n - 1][n - 1] == 1)
             return -1;
 
-        queue<pair<int, int>> q;
-        q.push({0, 0});
+        vector<vector<int>> dist(n, vector<int>(n, INT_MAX));
+        dist[0][0] = 0;
+
+        priority_queue<P, vector<P>, greater<P>> pq;
+        pq.push({0, {0, 0}});
         grid[0][0] = 1;
 
-        int steps = 0;
-
-        while (!q.empty())
+        while (!pq.empty())
         {
+            auto [d, coordinate] = pq.top();
+            auto [x, y] = coordinate;
+            pq.pop();
 
-            int sz = q.size();
+            if (d > dist[x][y])
+                continue;
 
-            while (sz--)
+            for (auto dir : directions)
             {
-                int x = q.front().first;
-                int y = q.front().second;
-                q.pop();
+                int _x = x + dir[0];
+                int _y = y + dir[1];
 
-                if (x == n - 1 && y == n - 1)
-                    return steps + 1;
-
-                for (auto vec : directions)
+                if (isValid(_x, _y, n) && grid[_x][_y] == 0)
                 {
-                    int _x = x + vec[0];
-                    int _y = y + vec[1];
-
-                    if (isValid(_x, _y, n) && grid[_x][_y] == 0)
+                    if (1 + dist[x][y] < dist[_x][_y])
                     {
-                        q.push({_x, _y});
-                        grid[_x][_y] = 1;
+                        dist[_x][_y] = 1 + dist[x][y];
+                        pq.push({dist[_x][_y], {_x, _y}});
+                        grid[_x][_y] == 1;
                     }
                 }
             }
-            steps++;
         }
-        return -1;
+        return (dist[n - 1][n - 1] == INT_MAX) ? -1 : dist[n - 1][n - 1] + 1;
     }
 };
